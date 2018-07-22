@@ -1,0 +1,20 @@
+if (inning == 1 &&
+          (totalWickets == teamA_Batting.length - 1 ||
+              ballsA == totalBallsToBePlayed)) {
+        //Change innings
+        setState(() {
+          inning = 2;
+          ballwiseDetailsA = ballwiseDetails;
+          //#Initiate ecverything:
+          onStrike = 0;
+          nonStrike = 1;
+          leftInUI = onStrike;
+          rightInUI = nonStrike;
+          bowlerIndex = 0;
+          totalWickets = totalWicketsB;
+          targetGiven = totalRunsA;
+          ballwiseDetails = ballwiseDetailsB;
+          changeTotals();
+          //#Show SnackBar stating innings 2 has started
+        });
+      } else 
