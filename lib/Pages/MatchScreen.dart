@@ -5,6 +5,7 @@ import 'package:flutter_app/Data/BallwiseData.dart';
 import 'PlayerNames.dart';
 import 'package:flutter/services.dart';
 import 'Popup/WicketManager.dart';
+import 'WinningScreen.dart';
 
 enum case_Each_Ball {
   dot,
@@ -29,17 +30,17 @@ class MatchScreen extends StatefulWidget {
 }
 
 class MatchScreenState extends State<MatchScreen> {
-  List<PlayerData> teamA_Batting = new List();
-  List<PlayerData> teamB_Batting = new List();
-  List<BallerData> teamA_Bowling = new List();
-  List<BallerData> teamB_Bowling = new List();
+  List<PlayerData> teamABatting = new List();
+  List<PlayerData> teamBBatting = new List();
+  List<BallerData> teamABowling = new List();
+  List<BallerData> teamBBowling = new List();
   List<BallwiseData> ballwiseDetailsA;
   List<BallwiseData> ballwiseDetailsB;
 
   //App details internal:
   List<PlayerData> teamBatting;
   static List<BallerData> teamBowling;
-  List<BallwiseData> ballwiseDetails = new List();
+  List<BallwiseData> ballwiseDetails;
   TextEditingController noBallController,
       preWicketScoreBallController,
       bowlerIndexController;
@@ -85,25 +86,26 @@ class MatchScreenState extends State<MatchScreen> {
     totalBallsToBePlayed = 6 *
         int.parse(widget.playerNameState.widget.matchDetailsState
             .totalOversController.text); //Conversion of overs to balls
+
     widget.playerNameState.teamA.forEach((p) {
-      teamA_Batting.add(new PlayerData(p, 0, false, 0));
-      teamA_Bowling.add(new BallerData(p, 0, 0, 0));
+      teamABatting.add(new PlayerData(p, 0, false, 0));
+      teamABowling.add(new BallerData(p, 0, 0, 0));
     });
-    teamA_Batting.add(new PlayerData("Extras", 0, false, 0));
+    teamABatting.add(new PlayerData("Extras", 0, false, 0));
     widget.playerNameState.teamB.forEach((p) {
-      teamB_Batting.add(new PlayerData(p, 0, false, 0));
-      teamB_Bowling.add(new BallerData(p, 0, 0, 0));
+      teamBBatting.add(new PlayerData(p, 0, false, 0));
+      teamBBowling.add(new BallerData(p, 0, 0, 0));
     }); //Initialising team from other class to this.
-    teamB_Batting
+    teamBBatting
         .add(new PlayerData("Extras", 0, false, 0)); //Extras to store wide etc.
     //To switch batting team to 'B' if teamA(By default chosen to bat by me) has not chosen to bat first.
     if (widget.playerNameState.widget.matchDetailsState.groupValue == 2) {
-      List<PlayerData> tempAPd = teamA_Batting;
-      List<BallerData> tempABd = teamA_Bowling;
-      teamA_Batting = teamB_Batting;
-      teamA_Bowling = teamB_Bowling;
-      teamB_Batting = tempAPd;
-      teamB_Bowling = tempABd;
+      List<PlayerData> tempAPd = teamABatting;
+      List<BallerData> tempABd = teamABowling;
+      teamABatting = teamBBatting;
+      teamABowling = teamBBowling;
+      teamBBatting = tempAPd;
+      teamBBowling = tempABd;
     }
 
     ballwiseDetails = [
@@ -117,12 +119,12 @@ class MatchScreenState extends State<MatchScreen> {
     ];
 
     if (inning == 1) {
-      teamBatting = teamA_Batting;
-      teamBowling = teamB_Bowling;
+      teamBatting = teamABatting;
+      teamBowling = teamBBowling;
       ballwiseDetails = ballwiseDetailsA;
     } else {
-      teamBatting = teamB_Batting;
-      teamBowling = teamA_Bowling;
+      teamBatting = teamBBatting;
+      teamBowling = teamABowling;
       ballwiseDetails = ballwiseDetailsB;
     } //To set correct team to correct field
 
@@ -209,9 +211,8 @@ class MatchScreenState extends State<MatchScreen> {
                     style: new TextStyle(color: Colors.black),
                   ),
                   onPressed: () {
-                    int a =
-                        int.parse(bowlerIndexController.text.toString());
-                    a--;                        
+                    int a = int.parse(bowlerIndexController.text.toString());
+                    a--;
                     if (a >= 0 && a < teamBowling.length) {
                       bowlerIndex = a;
                       Navigator.pop(context);
@@ -229,27 +230,27 @@ class MatchScreenState extends State<MatchScreen> {
       if (inning == 1) {
         totalRunsA = 0;
         totalWicketsA = 0;
-        teamA_Batting.forEach((p) {
+        teamABatting.forEach((p) {
           totalRunsA += p.player["Runs"]; //For total runs
           (p.player["Out"] == true)
               ? totalWicketsA += 1
               : null; //For total wickets
         });
         ballsB = 0;
-        teamB_Bowling.forEach((p) {
+        teamBBowling.forEach((p) {
           ballsB += p.player["Balls"]; //For total Balls
         });
       } else {
         totalRunsB = 0;
         totalWicketsB = 0;
-        teamB_Batting.forEach((p) {
+        teamBBatting.forEach((p) {
           totalRunsB += p.player["Runs"]; //For total runs
           (p.player["Out"] == true)
               ? totalWicketsB += 1
               : null; //For total wickets
         });
         ballsA = 0;
-        teamA_Bowling.forEach((p) {
+        teamABowling.forEach((p) {
           ballsA += p.player["Balls"]; //For total Balls
         });
       }
@@ -259,8 +260,8 @@ class MatchScreenState extends State<MatchScreen> {
           totalWicketsA.toString() +
           "totalWicketsB " +
           totalWicketsB.toString());
-      if (((ballsB % 6 == 0 && ballsB != 0) ||
-              (ballsA % 6 == 0 && ballsA != 0)) &&
+      if (((ballsB % 6 == 0 && ballsB != 0 && inning==1) ||
+              (ballsA % 6 == 0 && ballsA != 0 && inning==2)) &&
           undoClicked == false) {
         changeBowler(context);
         int temp = onStrike;
@@ -642,11 +643,11 @@ class MatchScreenState extends State<MatchScreen> {
   //Change innings:
   void changeInnings() {
     if (inning == 1 &&
-        (totalWickets == teamA_Batting.length - 2 ||
-            ballsA == totalBallsToBePlayed)) {
+        (totalWickets == teamABatting.length - 2 ||
+            ballsB >= totalBallsToBePlayed)) {
       //Change innings
-      setState(() {
         inning = 2;
+        ballsB+=1; //Manipulation!!!!
         ballwiseDetailsA = ballwiseDetails;
         //#Initiate ecverything:
         onStrike = 0;
@@ -656,10 +657,10 @@ class MatchScreenState extends State<MatchScreen> {
         bowlerIndex = 0;
         totalWickets = totalWicketsB;
         targetGiven = totalRunsA;
+        ballwiseDetailsA = ballwiseDetails;
         ballwiseDetails = ballwiseDetailsB;
         changeTotals();
         //#Show SnackBar stating innings 2 has started
-      });
     }
   }
 
@@ -668,7 +669,7 @@ class MatchScreenState extends State<MatchScreen> {
     String text = "O";
     switch (ib) {
       case case_Each_Ball.dot:
-        text = "O";
+        text = "0";
         break;
       case case_Each_Ball.Singles:
         text = "1";
@@ -707,52 +708,61 @@ class MatchScreenState extends State<MatchScreen> {
           shape: BoxShape.circle,
           color: (ib == case_Each_Ball.OUT)
               ? Colors.red[800]
-              : Colors.yellow[800]),
+              : (ib == case_Each_Ball.NB ||
+                      ib == case_Each_Ball.WD4 ||
+                      ib == case_Each_Ball.WD)
+                  ? Colors.yellow[800]
+                  : Colors.blue[700]),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: new Text(text),
+        child: new Text(
+          text,
+          style: new TextStyle(
+              fontSize: (ib == case_Each_Ball.OUT ||
+                      ib == case_Each_Ball.NB ||
+                      ib == case_Each_Ball.WD4 ||
+                      ib == case_Each_Ball.WD)
+                  ? 11.0
+                  : 15.0,
+              fontWeight: FontWeight.bold),
+        ),
       ),
     );
+  }
+
+  //To check Winning:
+  void checkWinning() {
+    print("checkWinnerMethod: " +
+        "totalWickets " +
+        totalWickets.toString() +
+        "totalWicketsA " +
+        totalWicketsA.toString() +
+        "totalWicketsB " +
+        totalWicketsB.toString());
+    if (inning == 2 &&
+        (totalWicketsB == teamBBatting.length - 1 ||
+            totalRunsB > targetGiven - 1 ||
+            ballsB == totalBallsToBePlayed)) {
+              print("True");
+      //Check winner or Tie.
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => WinningScreen(this)));
+          print("Changed");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (inning == 1) {
-      teamBatting = teamA_Batting;
-      teamBowling = teamB_Bowling;
+      teamBatting = teamABatting;
+      teamBowling = teamBBowling;
     } else {
-      teamBatting = teamB_Batting;
-      teamBowling = teamA_Bowling;
+      teamBatting = teamBBatting;
+      teamBowling = teamABowling;
     } //To set correct team to correct field
     //changeTotals();
 
     totalWickets = (inning == 1) ? totalWicketsA : totalWicketsB;
-    //To check Winning:
-    void checkWinning() {
-      print("checkWinnerMethod: " +
-          "totalWickets " +
-          totalWickets.toString() +
-          "totalWicketsA " +
-          totalWicketsA.toString() +
-          "totalWicketsB " +
-          totalWicketsB.toString());
-      if (inning == 2 &&
-          (totalWicketsB == teamB_Batting.length - 1 ||
-              totalRunsB >= targetGiven - 1 ||
-              ballsB == totalBallsToBePlayed)) {
-        //Check winner or Tie.
-        if (totalRunsB >= targetGiven) {
-          //B won
-          print("Showing Winning screen!");
-        } else if ((totalWicketsB == teamB_Batting.length - 1 ||
-                ballsB == totalBallsToBePlayed) &&
-            totalRunsB != targetGiven) {
-          print("Showing Winning screen!");
-        } else if (totalRunsB == targetGiven - 1) {
-          print("Showing Winning screen!");
-        }
-      }
-    }
 
     checkWinning();
 
@@ -812,7 +822,7 @@ class MatchScreenState extends State<MatchScreen> {
                           child: new Text(
                             inning == 1
                                 ? ("Req run rate: -")
-                                : ("Req run rate: ${((targetGiven-totalRunsB)/((totalBallsToBePlayed-ballsB)/6)).ceil()}"),
+                                : ("Req run rate: ${((targetGiven-totalRunsB)/((totalBallsToBePlayed-ballsA)/6)).ceil()}"),
                             style: new TextStyle(
                               fontSize: 18.0,
                               color: Colors.white,
@@ -857,7 +867,7 @@ class MatchScreenState extends State<MatchScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 4.0),
                         child: new Text(
                           (inning == 2)
-                              ? ("Need ${targetGiven-totalRunsB} for ${totalBallsToBePlayed-ballsB}")
+                              ? ("Need ${targetGiven-totalRunsB} for ${totalBallsToBePlayed-ballsA}")
                               : ("Balls remaining: ${totalBallsToBePlayed-ballsB}"),
                           style: new TextStyle(
                             fontSize: 18.0,
@@ -1058,29 +1068,35 @@ class MatchScreenState extends State<MatchScreen> {
           new Container(
               padding: new EdgeInsets.fromLTRB(6.0, 0.0, 0.0, 0.0),
               child: new Row(children: <Widget>[
-                new Text(
-                    teamBowling[bowlerIndex].player["Name"] +
-                        " (" +
-                        teamBowling[bowlerIndex].player["Wickets"].toString() +
-                        ")"
-                        ": ",
-                    style: new TextStyle(
-                        fontSize: 17.0,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "Roboto",
-                        color: Colors.grey[900])),
-                new Text(
-                    " " +
-                        (inning == 1
-                            ? ((ballsB / 6).floorToDouble() + (ballsB % 6) / 10)
-                                .toString()
-                            : ((ballsA / 6).floorToDouble() + (ballsA % 6) / 10)
-                                .toString()),
-                    style: new TextStyle(
-                        fontSize: 17.0,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "Roboto",
-                        color: Colors.grey[900])),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: new Text(
+                      teamBowling[bowlerIndex].player["Name"] +
+                          " (" +
+                          teamBowling[bowlerIndex].player["Wickets"].toString() +
+                          ")"
+                          ": ",
+                      style: new TextStyle(
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Roboto",
+                          color: Colors.grey[900])),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: new Text(
+                      " " +
+                          (inning == 1
+                              ? ((ballsB / 6).floorToDouble() + (ballsB % 6) / 10)
+                                  .toString()
+                              : ((ballsA / 6).floorToDouble() + (ballsA % 6) / 10)
+                                  .toString()),
+                      style: new TextStyle(
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Roboto",
+                          color: Colors.grey[900])),
+                ),
                 new Flexible(
                   child: new Container(),
                 ),
@@ -1099,25 +1115,32 @@ class MatchScreenState extends State<MatchScreen> {
               padding: new EdgeInsets.fromLTRB(0.0, 19.0, 0.0, 19.0),
               child: new Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children:
-                  (ballwiseDetails.length==0)?(List<Widget>.generate(6,(index) {
+                  children: /* List<Widget>.generate(
+                      (ballwiseDetails.length == 0)
+                          ? (6)
+                          : (ballwiseDetails.length), (index) {
+                    overNumber = (inning == 1)
+                        ? ((ballsB / 6).floorToDouble()).toInt()
+                        : ((ballsA / 6).floorToDouble()).toInt();
                     setState(() {
-                      return new Icon(Icons.add);
+                      if (ballwiseDetails.length == 0) {
+                        return new Icon(Icons.add);
+                      } else if (index >= (6 * (overNumber - 1))) {
+                        return getIcon(
+                            ballwiseDetails[index].ball["TypeOfBall"]);
+                      } else {
+                        return new Container();
+                      }
                     });
-                  })):
-                      List<Widget>.generate(ballwiseDetails.length,(index) {
-                    setState(() {
-                      (index >= (6 * (overNumber - 1)))
-                          ? (getIcon(ballwiseDetails[index].ball["TypeOfBall"])):null;
-                    });
-                  }) 
-                  /* <Widget>[
+                  }) */
+                      <Widget>[
+                    getIcon(case_Each_Ball.OUT),
+                    getIcon(case_Each_Ball.NB),
+                    getIcon(case_Each_Ball.Singles),
                     getIcon(case_Each_Ball.dot),
+                    getIcon(case_Each_Ball.Singles),
                     getIcon(case_Each_Ball.dot),
-                    getIcon(case_Each_Ball.dot),
-                    getIcon(case_Each_Ball.dot),
-                  ] */
-                  ))
+                  ]))
         ],
       ),
     ); //Container

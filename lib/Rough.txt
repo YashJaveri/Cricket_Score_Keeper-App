@@ -1,5 +1,5 @@
 if (inning == 1 &&
-          (totalWickets == teamA_Batting.length - 1 ||
+          (totalWickets == teamABatting.length - 1 ||
               ballsA == totalBallsToBePlayed)) {
         //Change innings
         setState(() {

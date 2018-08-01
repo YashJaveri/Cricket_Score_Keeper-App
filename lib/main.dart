@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'pages/MatchDetails.dart';
+
+import 'Pages/MatchDetails.dart';
 
 main() {
   runApp(new MyApp());
